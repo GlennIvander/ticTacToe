@@ -21,8 +21,10 @@ function createBoard() {
         tictactoeGrid.setAttribute("id", gridId);
         board.appendChild(tictactoeGrid);
         tictactoeGrid.addEventListener("click", () => {
-            if (!gameFinished) addMove(gridId, i);
-        });
+            if (!gameFinished && !tictactoeGrid.textContent) {
+                addMove(gridId, i);
+            }
+        }, { once: true });
     }
 }
 
@@ -67,6 +69,7 @@ function checkWinner() {
         const [a, b, c] = combo;
         if (gameBoard[a[0]][a[1]] && gameBoard[a[0]][a[1]] === gameBoard[b[0]][b[1]] && gameBoard[a[0]][a[1]] === gameBoard[c[0]][c[1]]) {
             let winner = gameBoard[a[0]][a[1]];
+            enlargeWinningCombo(combo);
             alert(`${winner} wins!`);
             confettiEffect();
             gameFinished = true;
@@ -76,7 +79,6 @@ function checkWinner() {
         }
     }
 
-    // Check for draw
     if (gameBoard.flat().every(cell => cell !== '')) {
         alert("It's a draw!");
         gameFinished = true;
@@ -85,7 +87,14 @@ function checkWinner() {
     }
 }
 
-// Confetti effect
+function enlargeWinningCombo(combo) {
+    combo.forEach(([row, col]) => {
+        let boxNumber = row * 3 + col;
+        let boxElement = document.getElementById(`box${boxNumber}`);
+        boxElement.classList.add('enlarge');
+    });
+}
+
 function confettiEffect() {
     confetti({
         particleCount: 1000,
@@ -95,45 +104,37 @@ function confettiEffect() {
 }
 
 function showHistoryButtons() {
-    // Button container
     const buttonContainer = document.createElement("div");
     buttonContainer.style.display = "flex";
     buttonContainer.style.justifyContent = "center";
     buttonContainer.style.marginTop = "20px";
     buttonContainer.style.flexWrap = "wrap";
 
-    // Previous button
     prevButton = document.createElement("button");
     prevButton.textContent = "Previous";
     prevButton.onclick = showPreviousMove;
     buttonContainer.appendChild(prevButton);
 
-    // Next button
     nextButton = document.createElement("button");
     nextButton.textContent = "Next";
     nextButton.onclick = showNextMove;
     buttonContainer.appendChild(nextButton);
 
-    // Reset button
     resetButton = document.createElement("button");
     resetButton.textContent = "Reset";
     resetButton.onclick = resetGame;
     buttonContainer.appendChild(resetButton);
 
-    // Append
     document.getElementById("container").appendChild(buttonContainer);
 
-    // Disable Next button if there's no further move
     updateButtonStates();
 
-    // Div for announcement and append to the below of button
     winnerAnnouncement = document.createElement("div");
     winnerAnnouncement.setAttribute("id", "winnerAnnouncement");
     winnerAnnouncement.style.marginTop = "20px";
     document.getElementById("container").appendChild(winnerAnnouncement);
 }
 
-// Display previous move
 function showPreviousMove() {
     if (moveIndex > 0) {
         moveIndex--;
@@ -142,7 +143,6 @@ function showPreviousMove() {
     }
 }
 
-// Display next move
 function showNextMove() {
     if (moveIndex < gameHistory.length - 1) {
         moveIndex++;
@@ -151,7 +151,6 @@ function showNextMove() {
     }
 }
 
-// Load a specific board state
 function loadBoard(boardState) {
     for (let i = 0; i < 9; i++) {
         let row = Math.floor(i / 3);
@@ -160,7 +159,6 @@ function loadBoard(boardState) {
     }
 }
 
-// Reset the game
 function resetGame() {
     gameBoard = [
         ['', '', ''],
@@ -171,22 +169,17 @@ function resetGame() {
     playerTurn1 = true;
     gameFinished = false;
 
-    // Remove buttons if they exist
     removeHistoryButtons();
 
-    // Clear the winner announcement
     announceWinner('');
 
-    // Clear the board visually
     for (let i = 0; i < 9; i++) {
         document.getElementById(`box${i}`).textContent = '';
     }
 
-    // Re-create the board
     createBoard();
 }
 
-// Remove Previous, Next, and Reset buttons
 function removeHistoryButtons() {
     if (prevButton) prevButton.remove();
     if (nextButton) nextButton.remove();
@@ -194,13 +187,11 @@ function removeHistoryButtons() {
     if (winnerAnnouncement) winnerAnnouncement.remove();
 }
 
-// Enable/Disable buttons based on game history
 function updateButtonStates() {
     prevButton.disabled = moveIndex <= 0;
     nextButton.disabled = moveIndex >= gameHistory.length - 1;
 }
 
-// Announce the winner or draw
 function announceWinner(message) {
     if (winnerAnnouncement) {
         winnerAnnouncement.textContent = message;
